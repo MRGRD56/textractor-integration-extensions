@@ -2,6 +2,8 @@
 
 ## HttpSender
 
+Asynchronously sends each sentence as an HTTP request. Can be used to integrate Textractor with other applications.
+
 ### Configuration
 
 #### HttpSenderConfig.json
