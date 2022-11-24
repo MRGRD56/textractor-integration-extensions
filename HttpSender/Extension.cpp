@@ -1,3 +1,5 @@
+#define synchronized(M)  for(Lock M##_lock = M; M##_lock; M##_lock.setUnlock())
+
 #include "Extension.h"
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
@@ -151,17 +153,31 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 	It will not be run concurrently with DllMain.
 */
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo) {
-	update_config();
+	//if (config == nullptr) {
+	//	update_config();
+	//}
 	
+	if (&sentence == nullptr) {
+		return false;
+	}
 	if (!is_enabled()) {
+		update_config();
 		return false;
 	}
 
 	const json sentence_config = config["sentence"];
 	
 	if (sentence_config["selectedThreadOnly"] == false || sentenceInfo["current select"]) {
+		//update_config();
 		send_http_request_async(sentence, sentenceInfo);
 	}
 
 	return false;
 }
+
+
+/*
+TODO FIXME
+Вызвано исключение по адресу 0x7B5D6EF4 (msvcp140d.dll) в Textractor.exe: 0xC0000005: нарушение прав доступа при чтении по адресу 0x00000000.
+Необработанное исключение по адресу 0x7B5D6EF4 (msvcp140d.dll) в Textractor.exe: 0xC0000005: нарушение прав доступа при чтении по адресу 0x00000000.
+*/
