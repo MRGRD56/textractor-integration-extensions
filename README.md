@@ -1,6 +1,8 @@
-﻿# Textractor Extensions
+# Textractor Extensions
 
-## HttpSender
+## HttpSender `unstable`
+
+Asynchronously sends each sentence as an HTTP request. Can be used to integrate Textractor with other applications.
 
 ### Configuration
 
