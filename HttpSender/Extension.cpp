@@ -22,7 +22,14 @@ const char* default_config = R"""({
 json config = nullptr;
 
 bool is_enabled() {
-	return config == nullptr || !config.is_object() || !config["sentence"]["enabled"];
+	if (config != nullptr && config.is_object()) {
+		json sentence = config["sentence"];
+		json sentenceEnabled = sentence["enabled"];
+		bool isSentenceEnabled = sentenceEnabled.get<bool>();
+		return isSentenceEnabled;
+	}
+
+	return false;
 }
 
 std::string wstring_to_utf8(const std::wstring& str) {
@@ -46,12 +53,13 @@ bool has_config() {
 }
 
 json get_config() {
-	const std::ifstream config_file(config_file_name);
+	std::ifstream config_file(config_file_name);
 	if (!config_file.good()) {
 		return nullptr;
 	}
 
-	return json::parse(config_file);
+	json config = json::parse(config_file);
+	return config;
 }
 
 bool check_config(const bool initialize) {
@@ -103,13 +111,13 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 	json request_body_json;
 	if (request_type == "JSON_TEXT") {
 		request_body_json = {
-			{"text", *sentence.c_str()}
+			{"text", sentence_string}
 		};
 		request_body = request_body_json.dump();
 		content_type = "application/json";
 	} else if (request_type == "JSON_TEXT_WITH_META") {
 		request_body_json = {
-			{"text", *sentence.c_str()},
+			{"text", sentence_string},
 			{"meta", {
 						{"isCurrentSelect", static_cast<bool>(sentenceInfo["current select"])},
 						{"processId", sentenceInfo["process id"]},
@@ -125,7 +133,7 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 	}
 
 	cpr::AsyncResponse response = PostAsync(
-		cpr::Url{ "http://localhost:1234/sentence" },
+		cpr::Url{ sentence_config["url"]},
 		cpr::Body{ request_body },
 		cpr::Header{
 			{"Content-Type", content_type},
@@ -151,7 +159,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo) {
 
 	const json sentence_config = config["sentence"];
 	
-	if (!sentence_config["selectedThreadOnly"] || sentenceInfo["current select"]) {
+	if (sentence_config["selectedThreadOnly"] == false || sentenceInfo["current select"]) {
 		send_http_request_async(sentence, sentenceInfo);
 	}
 
