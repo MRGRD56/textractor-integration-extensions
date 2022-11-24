@@ -1,4 +1,8 @@
-﻿### Configuration
+﻿# Textractor Extensions
+
+## HttpSender
+
+### Configuration
 
 #### HttpSenderConfig.json
 
