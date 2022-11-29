@@ -1,12 +1,16 @@
 #define synchronized(M)  for(Lock M##_lock = M; M##_lock; M##_lock.setUnlock())
 
 #include "Extension.h"
-#include <cpr/cpr.h>
+#include <fstream>
+#include <cpprest/http_client.h>
 #include <nlohmann/json.hpp>
 #include <codecvt>
 #include <string>
 #include <process.h>
+#include <mutex>
 #include "ShellAPI.h"
+#include <ctime>
+
 using json = nlohmann::json;
 
 const std::string config_file_name = "HttpSenderConfig.json";
@@ -60,8 +64,12 @@ json get_config() {
 		return nullptr;
 	}
 
-	json config = json::parse(config_file);
-	return config;
+	try {
+		json config = json::parse(config_file);
+		return config;
+	} catch (nlohmann::json_abi_v3_11_2::detail::parse_error) {
+		return nullptr;
+	}
 }
 
 bool check_config(const bool initialize) {
@@ -101,13 +109,15 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	return TRUE;
 }
 
-void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) {
+void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo, time_t timestamp) {
 	const std::string sentence_string = wstring_to_utf8(sentence);
 	
 	std::string request_body;
-	std::string content_type;
+	std::wstring content_type;
 
 	const json sentence_config = config["sentence"];
+	const std::string request_url = sentence_config["url"];
+	//const char* request_url_ptr = request_url.c_str();
 	const std::string request_type = sentence_config["requestType"].get<std::string>();
 
 	json request_body_json;
@@ -116,7 +126,7 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 			{"text", sentence_string}
 		};
 		request_body = request_body_json.dump();
-		content_type = "application/json";
+		content_type = L"application/json; charset=UTF-8";
 	} else if (request_type == "JSON_TEXT_WITH_META") {
 		request_body_json = {
 			{"text", sentence_string},
@@ -124,23 +134,33 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 						{"isCurrentSelect", static_cast<bool>(sentenceInfo["current select"])},
 						{"processId", sentenceInfo["process id"]},
 						{"threadNumber", sentenceInfo["text number"]},
-						{"threadName", sentenceInfo["text name"]}
+						{"threadName", sentenceInfo["text name"]},
+						{"timestamp", timestamp}
 			}}
 		};
 		request_body = request_body_json.dump();
-		content_type = "application/json";
+		content_type = L"application/json; charset=UTF-8";
 	} else {
 		request_body = sentence_string;
-		content_type = "text/plain";
+		content_type = L"text/plain; charset=UTF-8";
 	}
 
-	cpr::AsyncResponse response = PostAsync(
-		cpr::Url{ sentence_config["url"]},
+	web::http::client::http_client client(utf8_to_wstring(request_url));
+	web::http::http_request request(web::http::methods::POST);
+	request.headers().add(L"Connection", L"Keep-Alive");
+	request.headers().add(L"Content-Type", content_type);
+	request.set_body(request_body);
+
+	client.request(request);
+
+	/*cpr::AsyncResponse response = PostAsync(
+		cpr::Url{ request_url },
 		cpr::Body{ request_body },
 		cpr::Header{
 			{"Content-Type", content_type},
 			{"Connection", "Keep-Alive"}
 		});
+	*/
 }
 
 /*
@@ -153,23 +173,29 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo) 
 	It will not be run concurrently with DllMain.
 */
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo) {
-	//if (config == nullptr) {
-	//	update_config();
-	//}
+	if (config == nullptr) {
+		update_config();
+	}
 	
 	if (&sentence == nullptr) {
 		return false;
 	}
 	if (!is_enabled()) {
 		update_config();
-		return false;
+
+		if (!is_enabled()) {
+			return false;
+		}
 	}
 
 	const json sentence_config = config["sentence"];
 	
 	if (sentence_config["selectedThreadOnly"] == false || sentenceInfo["current select"]) {
-		//update_config();
-		send_http_request_async(sentence, sentenceInfo);
+		update_config();
+		
+		if (is_enabled() && (sentence_config["selectedThreadOnly"] == false || sentenceInfo["current select"])) {
+			send_http_request_async(sentence, sentenceInfo, std::time(0));
+		}
 	}
 
 	return false;
@@ -180,4 +206,4 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo) {
 TODO FIXME
 Вызвано исключение по адресу 0x7B5D6EF4 (msvcp140d.dll) в Textractor.exe: 0xC0000005: нарушение прав доступа при чтении по адресу 0x00000000.
 Необработанное исключение по адресу 0x7B5D6EF4 (msvcp140d.dll) в Textractor.exe: 0xC0000005: нарушение прав доступа при чтении по адресу 0x00000000.
-*/
+*/ 
