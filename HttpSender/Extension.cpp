@@ -145,13 +145,16 @@ void send_http_request_async(std::wstring& sentence, SentenceInfo sentenceInfo, 
 		content_type = L"text/plain; charset=UTF-8";
 	}
 
-	web::http::client::http_client client(utf8_to_wstring(request_url));
-	web::http::http_request request(web::http::methods::POST);
-	request.headers().add(L"Connection", L"Keep-Alive");
-	request.headers().add(L"Content-Type", content_type);
-	request.set_body(request_body);
+	try {
+		web::http::client::http_client client(utf8_to_wstring(request_url));
+		web::http::http_request request(web::http::methods::POST);
+		request.headers().add(L"Connection", L"Keep-Alive");
+		request.headers().add(L"Content-Type", content_type);
+		request.set_body(request_body);
 
-	client.request(request);
+		client.request(request);
+	}
+	catch (...) { }
 
 	/*cpr::AsyncResponse response = PostAsync(
 		cpr::Url{ request_url },
