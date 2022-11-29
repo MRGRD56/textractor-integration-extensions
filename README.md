@@ -35,7 +35,7 @@ Asynchronously sends each sentence as an HTTP request. Can be used to integrate 
 
 ```http request
 POST http://localhost:9650/sentence
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 
 Lorem ipsum dolor sit amet
 ```
@@ -44,7 +44,7 @@ Lorem ipsum dolor sit amet
 
 ```http request
 POST http://localhost:9650/sentence
-Content-Type: application/json
+Content-Type: application/json; charset=UTF-8
 
 {
   "text": "Lorem ipsum dolor sit amet"
@@ -55,7 +55,7 @@ Content-Type: application/json
 
 ```http request
 POST http://localhost:9650/sentence
-Content-Type: application/json
+Content-Type: application/json; charset=UTF-8
 
 {
   "text": "Lorem ipsum dolor sit amet",
@@ -63,7 +63,8 @@ Content-Type: application/json
     "isCurrentSelect": true,    // sentenceInfo["current select"]
     "processId": 2898235,       // sentenceInfo["process id"]
     "threadNumber": 12,         // sentenceInfo["text number"]
-    "threadName": "Some name"   // sentenceInfo["text name"]
+    "threadName": "Some name",  // sentenceInfo["text name"]
+    "timestamp": 1669721578
   }
 }
 ```
