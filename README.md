@@ -68,9 +68,3 @@ Content-Type: application/json; charset=UTF-8
   }
 }
 ```
-
-| Value                   | Explanation |
-|-------------------------|-------------|
-| `"PLAIN_TEXT"`          |             |
-| `"JSON_TEXT"`           |             |
-| `"JSON_TEXT_WITH_META"` |             |
