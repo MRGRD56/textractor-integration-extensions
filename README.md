@@ -68,3 +68,7 @@ Content-Type: application/json; charset=UTF-8
   }
 }
 ```
+
+## TextractorTranslatorBridge
+
+Zero config version of `HttpSender` special for [Textractor Translator](https://github.com/MRGRD56/textractor-translator)
