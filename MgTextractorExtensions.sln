@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HttpSender", "HttpSender\Ht
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextractorTranslatorBridge", "TextractorTranslatorBridge\TextractorTranslatorBridge.vcxproj", "{FFE2ACD4-0F31-4A4A-9D50-1F9B05116112}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextractorPipe", "TextractorPipe\TextractorPipe.vcxproj", "{849ACF10-F03F-481F-A8D9-D79499376238}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{FFE2ACD4-0F31-4A4A-9D50-1F9B05116112}.Release|x64.Build.0 = Release|x64
 		{FFE2ACD4-0F31-4A4A-9D50-1F9B05116112}.Release|x86.ActiveCfg = Release|Win32
 		{FFE2ACD4-0F31-4A4A-9D50-1F9B05116112}.Release|x86.Build.0 = Release|Win32
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Debug|x64.ActiveCfg = Debug|x64
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Debug|x64.Build.0 = Debug|x64
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Debug|x86.ActiveCfg = Debug|Win32
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Debug|x86.Build.0 = Debug|Win32
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Release|x64.ActiveCfg = Release|x64
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Release|x64.Build.0 = Release|x64
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Release|x86.ActiveCfg = Release|Win32
+		{849ACF10-F03F-481F-A8D9-D79499376238}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
