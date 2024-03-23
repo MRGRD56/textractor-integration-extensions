@@ -1,5 +1,28 @@
 # Textractor Extensions
 
+## TextractorPipe `dev`
+
+Creates a [named pipe](https://en.wikipedia.org/wiki/Named_pipe) and sends sentence data to it.
+
+The pipe name is `\\.\pipe\MRGRD56_TextractorPipe`.
+
+The data sent is in JSON format:
+
+```json
+{
+  "text": "Lorem ipsum dolor sit amet",
+  "meta": {
+    "isCurrentSelect": true,    // sentenceInfo["current select"]
+    "processId": 2898235,       // sentenceInfo["process id"]
+    "threadNumber": 12,         // sentenceInfo["text number"]
+    "threadName": "Some name",  // sentenceInfo["text name"]
+    "timestamp": 1669721578
+  }
+}
+```
+
+Every message in the pipe starts from the length of data that is represented by an `unsigned int32` that is exactly 4 bytes long (it is not text data!). The size is followed by JSON text data, whose length in bytes is equal to the number before it.
+
 ## HttpSender
 
 Asynchronously sends each sentence as an HTTP request. Can be used to integrate Textractor with other applications.
