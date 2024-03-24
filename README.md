@@ -23,10 +23,10 @@ The data sent is in JSON format:
 
 Every message in the pipe starts from the length of data that is represented by an `unsigned int32` that is exactly 4 bytes long (it is not text data!). The size is followed by JSON text data, whose length in bytes is equal to the number before it.
 
-| Range                | Description                                                        |
-|----------------------|--------------------------------------------------------------------|
-| [0..3]               | `uint32` representing the length of the message            |
-| [4..{length - 4}]    | JSON `string` representing the message                             |
+| Range                 | Description                                                        |
+|-----------------------|--------------------------------------------------------------------|
+| [0..3]                | `uint32` representing the length of the message                    |
+| [4..{length + 4 - 1}] | JSON `string` representing the message                             |
 
 ## HttpSender
 
