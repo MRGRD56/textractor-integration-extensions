@@ -1,6 +1,6 @@
 # Textractor Extensions
 
-## TextractorPipe `dev`
+## TextractorPipe
 
 Creates a [named pipe](https://en.wikipedia.org/wiki/Named_pipe) and sends sentence data to it.
 
