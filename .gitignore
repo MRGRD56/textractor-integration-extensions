@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /TTBridge
 *.lnk
 /TextractorPipe/win_x86
+/TextractorPipe/win_x64

@@ -13,10 +13,88 @@
 #include <cstddef> // For size_t
 #include <cstdint> // For int32_t
 #include <limits>
+#include <queue>
+#include <functional>
+#include <thread>
+#include <condition_variable>
+#include <atomic>
 
 using json = nlohmann::json;
 
-const LPCWSTR PIPE_NAME = L"\\\\.\\pipe\\MRGRD56_TextractorPipe";
+const LPCWSTR PIPE_NAME = L"\\\\.\\pipe\\MRGRD56_TextractorPipe_f30799d5-c7eb-48e2-b723-bd6314a03ba2";
+
+
+using Task = std::function<void()>;
+
+class BlockingQueue {
+public:
+	void push(Task task) {
+		{
+			std::lock_guard<std::mutex> lock(mutex_);
+			queue_.push(task);
+		}
+		condition_.notify_one();
+	}
+
+	Task pop() {
+		std::unique_lock<std::mutex> lock(mutex_);
+		condition_.wait(lock, [this] { return !queue_.empty(); });
+		Task task = queue_.front();
+		queue_.pop();
+		return task;
+	}
+
+	bool empty() const {
+		std::lock_guard<std::mutex> lock(mutex_);
+		return queue_.empty();
+	}
+
+private:
+	mutable std::mutex mutex_;
+	std::queue<Task> queue_;
+	std::condition_variable condition_;
+};
+
+class TaskExecutor {
+public:
+	TaskExecutor() : done(false) {
+		worker = std::thread([this]() { this->run(); });
+	}
+
+	~TaskExecutor() {
+		this->shotdown();
+	}
+
+	void addTask(Task task) {
+		tasks.push(task);
+	}
+
+	void shotdown() {
+		done = true;
+		tasks.push([]() {}); // Push an empty task to unblock pop if waiting.
+		if (worker.joinable()) {
+			worker.join();
+		}
+	}
+
+private:
+	std::atomic<bool> done;
+	BlockingQueue tasks;
+	std::thread worker;
+
+	void run() {
+		while (!done) {
+			Task task = tasks.pop();
+			if (done) break; // Check if we are done before executing.
+			task();
+		}
+	}
+};
+
+TaskExecutor* executor = nullptr;
+
+HANDLE pipe = nullptr;
+
 
 std::string wstring_to_utf8(const std::wstring& str) {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
@@ -43,8 +121,6 @@ HANDLE create_pipe() {
 	);
 }
 
-HANDLE pipe = nullptr;
-
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
 	switch (ul_reason_for_call) {
 		case DLL_PROCESS_ATTACH:
@@ -55,10 +131,18 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				return FALSE;
 			}
 			pipe = new_pipe;
+			executor = new TaskExecutor();
 		}
 		break;
 	case DLL_PROCESS_DETACH:
-		CloseHandle(&pipe);
+		try {
+			if (executor != nullptr) {
+				delete executor;
+			}
+		} catch (...) {}
+		try {
+			CloseHandle(&pipe);
+		} catch (...) {}
 		break;
 	}
 	return TRUE;
@@ -81,16 +165,6 @@ std::string serialize_sentence(std::wstring& sentence, SentenceInfo sentenceInfo
 	std::string request_body = request_body_json.dump();
 	return request_body;
 }
-
-//int32_t size_to_int32(std::size_t value) {
-//	if (value > std::numeric_limits<int32_t>::max()) {
-//		// Handle the case where the value is too large for a signed int32_t.
-//		// For the sake of this example, we'll just print an error and return the max value.
-//		std::cerr << "Warning: Value too large, conversion may lose data." << std::endl;
-//		return std::numeric_limits<int32_t>::max();
-//	}
-//	return static_cast<int32_t>(value);
-//}
 
 void send_data_to_pipe(const std::string& data) {
 	std::cout << "Waiting for a client to connect..." << std::endl;
@@ -135,65 +209,6 @@ void send_data_to_pipe(const std::string& data) {
 	}
 }
 
-// Функция для отправки данных через именованный канал
-//void send_data_to_pipe(const std::string& data) {
-//	// Создание именованного канала
-//	HANDLE pipe = CreateFileW(PIPE_NAME.c_str(),
-//		GENERIC_WRITE,
-//		0, // No sharing
-//		NULL, // Default security attributes
-//		OPEN_EXISTING, // Opens existing pipe
-//		0, // Default attributes
-//		NULL); // No template file
-//	if (pipe == INVALID_HANDLE_VALUE) {
-//		std::cerr << "Failed to connect to pipe: " << GetLastError() << std::endl;
-//		return;
-//	}
-//
-//	// Отправка данных
-//	DWORD bytesWritten;
-//	BOOL result = WriteFile(pipe, data.c_str(), data.size(), &bytesWritten, NULL);
-//	if (!result) {
-//		std::cerr << "Failed to send data: " << GetLastError() << std::endl;
-//	}
-//
-//	// Закрытие дескриптора именованного канала
-//	CloseHandle(pipe);
-//}
-
-// Функция для отправки данных через named pipe асинхронно
-//void send_data_to_pipe_async1(const std::wstring& data) {
-//	auto sendData = [](const std::wstring data) {
-//		HANDLE hPipe;
-//
-//		// Попытка подключения к named pipe
-//		hPipe = CreateFile(PIPE_NAME.c_str(), GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-//		if (hPipe == INVALID_HANDLE_VALUE) {
-//			std::cerr << "Failed to connect to pipe: " << GetLastError() << std::endl;
-//			return;
-//		}
-//
-//		// Отправка данных
-//		DWORD bytesWritten = 0;
-//		BOOL result = WriteFile(hPipe, data.c_str(), (data.size() + 1) * sizeof(wchar_t), &bytesWritten, NULL);
-//		if (!result) {
-//			std::cerr << "Failed to write to pipe: " << GetLastError() << std::endl;
-//		}
-//
-//		CloseHandle(hPipe);
-//	};
-//
-//	// Запуск асинхронной отправки данных
-//	std::async(std::launch::async, sendData, data);
-//}
-
-//void send_data_to_pipe_async(const std::string& data) {
-//	// Запуск асинхронной отправки данных
-//	std::async(std::launch::async, [&data](){
-//		send_data_to_pipe(data);
-//	});
-//}
-
 /*
 	Param sentence: sentence received by Textractor (UTF-16). Can be modified, Textractor will receive this modification only if true is returned.
 	Param sentenceInfo: contains miscellaneous info about the sentence (see README).
@@ -205,8 +220,12 @@ void send_data_to_pipe(const std::string& data) {
 */
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo) {
 	if (&sentence != nullptr && sentenceInfo["current select"]) {
-		std::string data = serialize_sentence(sentence, sentenceInfo, std::time(0));
-		send_data_to_pipe(data);
+		try {
+			std::string data = serialize_sentence(sentence, sentenceInfo, std::time(0));
+			executor->addTask([data]() {
+				send_data_to_pipe(data);
+			});
+		} catch (...) {}
 	}
 
 	return false;
