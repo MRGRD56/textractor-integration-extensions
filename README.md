@@ -2,6 +2,7 @@
 
 ## TextractorPipe
 
+The most stable extension here.  
 Creates a [named pipe](https://en.wikipedia.org/wiki/Named_pipe) and sends sentence data to it.
 
 The pipe name is `\\.\pipe\MRGRD56_TextractorPipe_f30799d5-c7eb-48e2-b723-bd6314a03ba2`.
