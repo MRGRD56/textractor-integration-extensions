@@ -7,6 +7,8 @@ Creates a [named pipe](https://en.wikipedia.org/wiki/Named_pipe) and sends sente
 
 The pipe name is `\\.\pipe\MRGRD56_TextractorPipe_f30799d5-c7eb-48e2-b723-bd6314a03ba2`.
 
+This extension is currently used by the latest version of [Textractor Translator](https://github.com/MRGRD56/textractor-translator).
+
 The data sent is in JSON format:
 
 ```json
@@ -100,7 +102,7 @@ Content-Type: application/json; charset=UTF-8
 
 ## TextractorTranslatorBridge
 
-Zero config version of `HttpSender` special for [Textractor Translator](https://github.com/MRGRD56/textractor-translator)
+Zero config version of `HttpSender` made specially for some old versions of [Textractor Translator](https://github.com/MRGRD56/textractor-translator)
 
 Matches the following config of `HttpSender`:
 
