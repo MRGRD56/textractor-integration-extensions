@@ -9,7 +9,7 @@ The pipe name is `\\.\pipe\MRGRD56_TextractorPipe_f30799d5-c7eb-48e2-b723-bd6314
 
 This extension is currently used by the latest version of [Textractor Translator](https://github.com/MRGRD56/textractor-translator).
 
-The data sent is in JSON format:
+The data is sent in JSON format:
 
 ```json
 {
