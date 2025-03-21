@@ -12,6 +12,7 @@ This extension is currently used by the latest version of [Textractor Translator
 The data is sent in JSON format:
 
 ```json
+<0x00, 0x00, 0x00, 0xA7>
 {
   "text": "Lorem ipsum dolor sit amet",
   "meta": {
